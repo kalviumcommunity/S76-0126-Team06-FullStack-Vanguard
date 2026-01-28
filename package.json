@@ -1,0 +1,38 @@
+{
+    "version":  "0.1.0",
+    "name":  "s76-0126-team06-fullstack-vanguard",
+    "description":  "Project Vanguard - Full Stack Application",
+    "scripts":  {
+                    "dev":  "next dev",
+                    "build":  "next build",
+                    "start":  "next start",
+                    "lint":  "eslint",
+                    "client:dev":  "next dev",
+                    "client:build":  "next build",
+                    "client:start":  "next start",
+                    "server:dev":  "next dev",
+                    "server:build":  "next build"
+                },
+    "dependencies":  {
+                         "react-dom":  "19.2.3",
+                         "clsx":  "^2.1.1",
+                         "recharts":  "^3.7.0",
+                         "react":  "19.2.3",
+                         "next":  "16.1.4",
+                         "@prisma/client":  "^7.3.0",
+                         "lucide-react":  "^0.344.0",
+                         "tailwind-merge":  "^2.2.1",
+                         "redis":  "^5.10.0"
+                     },
+    "devDependencies":  {
+                            "prisma":  "^7.3.0",
+                            "@types/react-dom":  "^19",
+                            "tailwindcss":  "^4",
+                            "@types/node":  "^20",
+                            "eslint":  "^9",
+                            "@tailwindcss/postcss":  "^4",
+                            "@types/react":  "^19",
+                            "typescript":  "^5",
+                            "eslint-config-next":  "16.1.4"
+                        }
+}
