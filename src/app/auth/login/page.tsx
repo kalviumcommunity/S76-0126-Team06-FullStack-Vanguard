@@ -1,63 +1,139 @@
-import type { Metadata } from "next";
+'use client';
 
-export const metadata: Metadata = {
-  title: "Login - Project Vanguard",
-  description: "Sign in to Project Vanguard",
-};
+import { useState } from 'react';
+import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { LogIn, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'student' | 'mentor'>('student');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await login(email, password, role);
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a] px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-purple-600" />
+        <Link href="/" className="flex justify-center mb-8">
+          <div className="flex items-center gap-3 group cursor-pointer">
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#10b981] to-[#059669] flex items-center justify-center transform transition-transform duration-300 group-hover:scale-110">
+              <span className="text-white font-bold text-xl">V</span>
+            </div>
             <h1 className="text-2xl font-bold text-white">Vanguard</h1>
           </div>
-        </div>
+        </Link>
 
         {/* Card */}
-        <div className="bg-slate-800/80 backdrop-blur rounded-lg border border-slate-700 shadow-2xl p-8">
+        <div className="bg-[#1a1a1a] backdrop-blur rounded-2xl border border-gray-800 shadow-2xl p-8">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-2">Welcome Back</h2>
-            <p className="text-slate-400">Sign in to your Vanguard account</p>
+            <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
+            <p className="text-gray-400">Sign in to your Vanguard account</p>
           </div>
 
-          <form className="space-y-6">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg flex items-center gap-3 text-red-400">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
+          {/* Demo Credentials */}
+          <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <p className="text-sm text-blue-400 font-medium mb-2">Demo Credentials:</p>
+            <p className="text-xs text-gray-400">Student: student@vanguard.com / student123</p>
+            <p className="text-xs text-gray-400">Mentor: mentor@vanguard.com / mentor123</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Role Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-3">
+                Login as:
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRole('student')}
+                  className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm ${
+                    role === 'student'
+                      ? 'bg-[#10b981]/20 border-[#10b981] text-[#10b981]'
+                      : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
+                  }`}
+                >
+                  📚 Student
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('mentor')}
+                  className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm ${
+                    role === 'mentor'
+                      ? 'bg-purple-600/20 border-purple-500 text-purple-400'
+                      : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
+                  }`}
+                >
+                  👨‍🏫 Mentor
+                </button>
+              </div>
+            </div>
+
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Email Address
               </label>
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-2 rounded-lg bg-slate-700/50 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                className="w-full px-4 py-3 rounded-lg bg-[#0f0f0f] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#10b981] focus:ring-2 focus:ring-[#10b981]/20 transition"
                 required
               />
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Password
               </label>
               <input
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-2 rounded-lg bg-slate-700/50 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                className="w-full px-4 py-3 rounded-lg bg-[#0f0f0f] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#10b981] focus:ring-2 focus:ring-[#10b981]/20 transition"
                 required
               />
             </div>
 
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-slate-400 cursor-pointer hover:text-slate-300">
-                <input type="checkbox" className="rounded w-4 h-4 bg-slate-700 border-slate-600" />
+              <label className="flex items-center gap-2 text-gray-400 cursor-pointer hover:text-gray-300">
+                <input 
+                  type="checkbox" 
+                  className="rounded w-4 h-4 bg-[#0f0f0f] border-gray-700 text-[#10b981] focus:ring-[#10b981]" 
+                />
                 Remember me
               </label>
-              <a href="#" className="text-blue-500 hover:text-blue-400">
+              <a href="#" className="text-[#10b981] hover:text-[#059669]">
                 Forgot password?
               </a>
             </div>
@@ -65,50 +141,37 @@ export default function LoginPage() {
             {/* Sign In Button */}
             <button
               type="submit"
-              className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-2.5 rounded-lg transition duration-200"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white font-semibold py-3 rounded-lg transition duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#10b981]/20"
             >
-              Sign In
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-5 h-5" />
+                  Sign In
+                </>
+              )}
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-600"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-slate-800 text-slate-400">Or</span>
-            </div>
-          </div>
-
-          {/* Role Selection */}
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-slate-300 mb-3">Login as:</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className="px-4 py-2.5 rounded-lg bg-blue-600/20 border border-blue-500/50 text-blue-400 hover:bg-blue-600/30 transition font-medium text-sm"
-              >
-                📚 Student
-              </button>
-              <button
-                type="button"
-                className="px-4 py-2.5 rounded-lg bg-purple-600/20 border border-purple-500/50 text-purple-400 hover:bg-purple-600/30 transition font-medium text-sm"
-              >
-                👨‍🏫 Mentor
-              </button>
-            </div>
+          {/* Sign Up Link */}
+          <div className="mt-6 text-center text-sm">
+            <span className="text-gray-400">Don't have an account? </span>
+            <Link href="/auth/signup" className="text-[#10b981] hover:text-[#059669] font-medium">
+              Sign up
+            </Link>
           </div>
         </div>
 
-        {/* Sign Up Link */}
+        {/* Back to Home */}
         <div className="mt-6 text-center">
-          <p className="text-slate-400">
-            Don't have an account?{" "}
-            <a href="/auth/signup" className="text-blue-500 hover:text-blue-400 font-semibold">
-              Create one now
-            </a>
-          </p>
+          <Link href="/" className="text-sm text-gray-400 hover:text-gray-300 transition">
+            ← Back to home
+          </Link>
         </div>
       </div>
     </div>
