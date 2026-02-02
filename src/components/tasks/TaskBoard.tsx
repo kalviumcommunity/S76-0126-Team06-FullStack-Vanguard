@@ -3,15 +3,15 @@
 import { Trash2, Edit2, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { getPriorityColor, getStatusColor, formatDate } from "@/lib/utils";
 
-// Mock data
-const tasksByStatus = {
+// Mock data with fixed dates to prevent hydration mismatch
+const getTasksByStatus = () => ({
   TODO: [
     {
       id: 1,
       title: "Setup Database Schema",
       description: "Create PostgreSQL schema for projects and teams",
       priority: "CRITICAL",
-      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(2025, 1, 1),
       assignee: "Alex",
     },
     {
@@ -19,7 +19,7 @@ const tasksByStatus = {
       title: "Environment Configuration",
       description: "Setup Docker and environment variables",
       priority: "HIGH",
-      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(2025, 1, 2),
       assignee: "Jordan",
     },
   ],
@@ -29,7 +29,7 @@ const tasksByStatus = {
       title: "API Routes Implementation",
       description: "Implement REST API routes for teams",
       priority: "HIGH",
-      dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(2025, 1, 31),
       assignee: "Sam",
     },
     {
@@ -37,7 +37,7 @@ const tasksByStatus = {
       title: "Frontend Dashboard",
       description: "Build student engagement dashboard",
       priority: "HIGH",
-      dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(2025, 1, 3),
       assignee: "Riley",
     },
   ],
@@ -47,7 +47,7 @@ const tasksByStatus = {
       title: "Authentication Module",
       description: "Implement role-based authentication",
       priority: "CRITICAL",
-      dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(2025, 1, 31),
       assignee: "Morgan",
     },
   ],
@@ -57,11 +57,11 @@ const tasksByStatus = {
       title: "Project Repository Setup",
       description: "Initialize GitHub repo and CI/CD",
       priority: "MEDIUM",
-      dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(2025, 0, 25),
       assignee: "Casey",
     },
   ],
-};
+});
 
 interface TaskCardProps {
   id: number;
@@ -120,6 +120,7 @@ function TaskCard({ id, title, description, priority, dueDate, assignee, onDelet
 }
 
 export function TaskBoard() {
+  const tasksByStatus = getTasksByStatus();
   const columns = [
     { key: "TODO", label: "To Do", color: "bg-slate-500/20" },
     { key: "IN_PROGRESS", label: "In Progress", color: "bg-blue-500/20" },

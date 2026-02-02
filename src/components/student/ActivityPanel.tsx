@@ -3,13 +3,13 @@
 import { CheckCircle, AlertCircle, Clock, Zap } from "lucide-react";
 import { getStatusColor, getRelativeTime, getPriorityColor } from "@/lib/utils";
 
-// Mock data
-const recentActivities = [
+// Mock data with fixed dates to prevent hydration mismatch
+const getRecentActivities = () => [
   {
     id: 1,
     type: "TASK_COMPLETED",
     description: "Completed task: API Integration",
-    time: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    time: new Date(2025, 0, 30, 14, 0),
     icon: CheckCircle,
     color: "text-green-500",
   },
@@ -17,7 +17,7 @@ const recentActivities = [
     id: 2,
     type: "FEEDBACK_RECEIVED",
     description: "Received feedback from Sarah on Design Review",
-    time: new Date(Date.now() - 4 * 60 * 60 * 1000),
+    time: new Date(2025, 0, 30, 12, 0),
     icon: Zap,
     color: "text-blue-500",
   },
@@ -25,7 +25,7 @@ const recentActivities = [
     id: 3,
     type: "DEADLINE_WARNING",
     description: "Deadline approaching for Frontend Implementation",
-    time: new Date(Date.now() - 6 * 60 * 60 * 1000),
+    time: new Date(2025, 0, 30, 10, 0),
     icon: AlertCircle,
     color: "text-orange-500",
   },
@@ -33,13 +33,14 @@ const recentActivities = [
     id: 4,
     type: "TASK_ASSIGNED",
     description: "New task assigned: Database Schema Design",
-    time: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    time: new Date(2025, 0, 29, 14, 0),
     icon: Clock,
     color: "text-purple-500",
   },
 ];
 
 export function RecentActivity() {
+  const recentActivities = getRecentActivities();
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
       <div className="mb-6">
@@ -73,7 +74,7 @@ export function UpcomingTasks() {
       id: 1,
       title: "API Documentation",
       project: "Squad Portal",
-      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(2025, 1, 1),
       priority: "HIGH",
       status: "IN_PROGRESS",
     },
@@ -81,7 +82,7 @@ export function UpcomingTasks() {
       id: 2,
       title: "Unit Tests",
       project: "Squad Portal",
-      dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(2025, 1, 3),
       priority: "MEDIUM",
       status: "TODO",
     },
@@ -89,7 +90,7 @@ export function UpcomingTasks() {
       id: 3,
       title: "Code Review Session",
       project: "Analytics Dashboard",
-      dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(2025, 1, 31),
       priority: "HIGH",
       status: "TODO",
     },
