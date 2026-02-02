@@ -76,12 +76,38 @@ export const engagementAPI = {
 
 // Projects & Tasks
 export const projectAPI = {
+  // Project endpoints
   getProjects: async () =>
     apiCall("/projects", { method: "GET" }),
 
   getProjectById: async (id: string) =>
     apiCall(`/projects/${id}`, { method: "GET" }),
 
+  createProject: async (data: {
+    name: string;
+    description?: string;
+    memberIds?: string[];
+  }) =>
+    apiCall("/projects", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateProject: async (
+    id: string,
+    data: { name?: string; description?: string }
+  ) =>
+    apiCall(`/projects/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteProject: async (id: string) =>
+    apiCall(`/projects/${id}`, {
+      method: "DELETE",
+    }),
+
+  // Task endpoints
   getTasks: async (projectId: string) =>
     apiCall(`/projects/${projectId}/tasks`, { method: "GET" }),
 

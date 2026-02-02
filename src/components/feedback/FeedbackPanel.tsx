@@ -4,8 +4,8 @@ import { Smile, MessageSquare, Star, ThumbsUp, Send } from "lucide-react";
 import { getSentimentColor, getSentimentBgColor, formatDate, getRelativeTime } from "@/lib/utils";
 import { useState } from "react";
 
-// Mock data
-const receivedFeedback = [
+// Mock data with fixed dates to prevent hydration mismatch
+const getReceivedFeedback = () => [
   {
     id: 1,
     from: "Sarah Chen",
@@ -14,7 +14,7 @@ const receivedFeedback = [
       "Great work on the API documentation! Your explanations are clear and comprehensive. Really helped the team understand the endpoints.",
     sentiment: "POSITIVE" as const,
     category: "TECHNICAL",
-    date: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    date: new Date(2025, 0, 29),
     helpful: true,
   },
   {
@@ -25,7 +25,7 @@ const receivedFeedback = [
       "I think you could improve your communication during meetings. Sometimes it's hard to understand your suggestions.",
     sentiment: "CONSTRUCTIVE" as const,
     category: "COMMUNICATION",
-    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    date: new Date(2025, 0, 28),
     helpful: false,
   },
   {
@@ -36,7 +36,7 @@ const receivedFeedback = [
       "Your code reviews are always thorough and fair. Great leadership in code quality maintenance!",
     sentiment: "POSITIVE" as const,
     category: "COLLABORATION",
-    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    date: new Date(2025, 0, 27),
     helpful: true,
   },
   {
@@ -46,12 +46,13 @@ const receivedFeedback = [
     content: "Would be good to take more initiative in suggesting improvements to the project structure.",
     sentiment: "CONSTRUCTIVE" as const,
     category: "LEADERSHIP",
-    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    date: new Date(2025, 0, 25),
     helpful: null,
   },
 ];
 
 export function FeedbackReceived() {
+  const receivedFeedback = getReceivedFeedback();
   const positive = receivedFeedback.filter((f) => f.sentiment === "POSITIVE").length;
   const constructive = receivedFeedback.filter((f) => f.sentiment === "CONSTRUCTIVE").length;
 

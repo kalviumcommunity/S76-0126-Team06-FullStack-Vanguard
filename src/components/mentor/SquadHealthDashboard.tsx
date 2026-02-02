@@ -4,15 +4,15 @@ import { AlertCircle, TrendingDown, Users, CheckCircle } from "lucide-react";
 import { getHealthStatusColor, getHealthStatusBgColor, formatPercentage } from "@/lib/utils";
 import type { StudentHealthStatus } from "@/lib/types";
 
-// Mock data
-const squadMembers: StudentHealthStatus[] = [
+// Mock data with fixed dates to prevent hydration mismatch
+const getSquadMembers = (): StudentHealthStatus[] => [
   {
     userId: "1",
     engagementScore: 92,
     taskCompletion: 95,
     feedbackScore: 88,
     status: "EXCELLENT",
-    lastActive: new Date(Date.now() - 30 * 60 * 1000),
+    lastActive: new Date(2025, 0, 30, 15, 30),
     flags: [],
   },
   {
@@ -21,7 +21,7 @@ const squadMembers: StudentHealthStatus[] = [
     taskCompletion: 82,
     feedbackScore: 75,
     status: "NORMAL",
-    lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    lastActive: new Date(2025, 0, 30, 14, 0),
     flags: [],
   },
   {
@@ -30,7 +30,7 @@ const squadMembers: StudentHealthStatus[] = [
     taskCompletion: 38,
     feedbackScore: 42,
     status: "AT_RISK",
-    lastActive: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    lastActive: new Date(2025, 0, 29, 16, 0),
     flags: ["Low engagement", "Missed deadline", "No recent updates"],
   },
   {
@@ -39,7 +39,7 @@ const squadMembers: StudentHealthStatus[] = [
     taskCompletion: 91,
     feedbackScore: 86,
     status: "EXCELLENT",
-    lastActive: new Date(Date.now() - 1 * 60 * 60 * 1000),
+    lastActive: new Date(2025, 0, 30, 17, 0),
     flags: [],
   },
   {
@@ -48,12 +48,13 @@ const squadMembers: StudentHealthStatus[] = [
     taskCompletion: 55,
     feedbackScore: 48,
     status: "AT_RISK",
-    lastActive: new Date(Date.now() - 48 * 60 * 60 * 1000),
+    lastActive: new Date(2025, 0, 28, 16, 0),
     flags: ["Declining engagement", "Struggling with implementation"],
   },
 ];
 
 export function SquadHealthMap() {
+  const squadMembers = getSquadMembers();
   const atRiskCount = squadMembers.filter((m) => m.status === "AT_RISK").length;
   const avgEngagement =
     Math.round(squadMembers.reduce((sum, m) => sum + m.engagementScore, 0) / squadMembers.length);
