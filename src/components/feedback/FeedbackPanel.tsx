@@ -83,11 +83,10 @@ export function FeedbackReceived() {
         {receivedFeedback.map((feedback) => (
           <div
             key={feedback.id}
-            className={`p-4 rounded-lg border transition ${
-              feedback.sentiment === "POSITIVE"
+            className={`p-4 rounded-lg border transition ${feedback.sentiment === "POSITIVE"
                 ? "bg-green-500/10 border-green-500/30"
                 : "bg-blue-500/10 border-blue-500/30"
-            }`}
+              }`}
           >
             <div className="flex items-start gap-3 mb-3">
               <div className="w-9 h-9 rounded-full bg-slate-700/50 flex items-center justify-center text-sm font-semibold text-foreground">
@@ -180,15 +179,14 @@ export function GiveFeedbackForm() {
                 key={s}
                 type="button"
                 onClick={() => setSentiment(s as any)}
-                className={`py-2 px-3 rounded-lg text-sm font-medium transition ${
-                  sentiment === s
+                className={`py-2 px-3 rounded-lg text-sm font-medium transition ${sentiment === s
                     ? s === "POSITIVE"
                       ? "bg-green-600 text-white"
                       : s === "NEUTRAL"
                         ? "bg-gray-600 text-white"
                         : "bg-blue-600 text-white"
                     : "bg-secondary/50 border border-secondary text-foreground hover:border-muted-foreground"
-                }`}
+                  }`}
               >
                 {s === "POSITIVE" ? "😊" : s === "NEUTRAL" ? "😐" : "💡"} {s}
               </button>
