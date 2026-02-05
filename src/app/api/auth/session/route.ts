@@ -1,30 +1,102 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { getCurrentUser } from '@/lib/auth';
 
+/**
+ * GET /api/auth/session
+ * Returns the current user session
+ * Used by the client to check authentication status
+ * 
+ * This endpoint is useful for:
+ * - Checking if user is logged in on page load
+ * - Getting current user data for UI rendering
+ * - Validating session before performing actions
+ */
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session');
+    // ============================================================
+    // 1. GET CURRENT USER FROM SESSION
+    // ============================================================
 
-    if (!sessionCookie?.value) {
-      return NextResponse.json({ user: null }, { status: 200 });
+    const user = await getCurrentUser();
+
+    // ============================================================
+    // 2. RETURN USER OR 401 IF NOT AUTHENTICATED
+    // ============================================================
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          authenticated: false,
+          error: 'Not authenticated',
+          message: 'No active session found',
+        },
+        { status: 401 }
+      );
     }
 
-    try {
-      const session = JSON.parse(sessionCookie.value);
+    // ============================================================
+    // 3. RETURN CURRENT USER DATA
+    // ============================================================
 
-      // Check if session is expired
-      if (session.expires && new Date(session.expires) < new Date()) {
-        return NextResponse.json({ user: null }, { status: 200 });
-      }
+    return NextResponse.json({
+      authenticated: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
 
-      return NextResponse.json({ user: session.user || null }, { status: 200 });
-    } catch (parseError) {
-      console.error('Session parse error:', parseError);
-      return NextResponse.json({ user: null }, { status: 200 });
-    }
   } catch (error) {
-    console.error('Session error:', error);
-    return NextResponse.json({ user: null }, { status: 200 });
+    console.error('[AUTH_SESSION_ERROR]', error);
+
+    return NextResponse.json(
+      {
+        authenticated: false,
+        error: 'Session validation failed',
+      },
+      { status: 401 }
+    );
+  }
+}
+
+/**
+ * POST /api/auth/session
+ * Validates and refreshes the current session
+ * This can be used to extend session expiry time
+ */
+export async function POST() {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    // Session is valid - could refresh it here if needed
+    // For now, just return current session info
+
+    return NextResponse.json({
+      authenticated: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      message: 'Session is valid',
+    });
+
+  } catch (error) {
+    console.error('[AUTH_SESSION_REFRESH_ERROR]', error);
+
+    return NextResponse.json(
+      { error: 'Session validation failed' },
+      { status: 401 }
+    );
   }
 }
