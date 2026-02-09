@@ -1,3 +1,46 @@
+                if (!isPasswordValid) {
+                    return null;
+                }
+
+                return {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                    projectId: user.projectId,
+                    mentorId: user.mentorId,
+                    createdAt: user.createdAt,
+                };
+            },
+        }),
+    ],
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user) {
+                console.log('[NextAuth] JWT Callback - User:', user.email);
+                token.id = user.id;
+                token.role = (user as any).role;
+                token.projectId = (user as any).projectId || null;
+                token.mentorId = (user as any).mentorId || null;
+                token.createdAt = (user as any).createdAt;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (token) {
+                console.log('[NextAuth] Session Callback - Role:', token.role);
+                session.user.id = token.id;
+                session.user.role = token.role;
+                session.user.projectId = token.projectId;
+                session.user.mentorId = token.mentorId;
+                (session.user as any).createdAt = token.createdAt;
+            }
+            return session;
+        },
+    },
+    secret: process.env.NEXTAUTH_SECRET || 'supersecretkeyshouldbeenv', // Fallback for dev
+};
+=======
 import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 import { Role } from '@prisma/client';
@@ -171,3 +214,4 @@ export function validatePassword(password: string): { isValid: boolean; error?: 
 
     return { isValid: true };
 }
+>>>>>>> 4de8c1147d8a9ffd4acd0b5780d80706e8c116da

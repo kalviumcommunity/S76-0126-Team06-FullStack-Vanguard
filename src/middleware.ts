@@ -1,3 +1,60 @@
+<<<<<<< HEAD
+import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
+
+export default withAuth(
+    function middleware(req) {
+        const token = req.nextauth.token;
+        const isAuth = !!token;
+        const isDashboardPage = req.nextUrl.pathname.startsWith("/dashboard");
+
+        if (isDashboardPage && !isAuth) {
+            return NextResponse.redirect(new URL("/auth/login", req.url));
+        }
+
+        // Role-based redirection for the root dashboard path
+        if (req.nextUrl.pathname === "/dashboard") {
+            if (token?.role === "MENTOR") {
+                return NextResponse.redirect(new URL("/dashboard/mentor", req.url));
+            }
+            if (token?.role === "STUDENT") {
+                return NextResponse.redirect(new URL("/dashboard/student", req.url));
+            }
+            // If no role, fallback to login
+            return NextResponse.redirect(new URL("/auth/login", req.url));
+        }
+
+        // Protect role-specific routes
+        if (req.nextUrl.pathname.startsWith("/dashboard/mentor")) {
+            if (token?.role === "STUDENT") {
+                return NextResponse.redirect(new URL("/dashboard/student", req.url));
+            }
+            if (!token?.role) {
+                return NextResponse.redirect(new URL("/auth/login", req.url));
+            }
+        }
+
+        if (req.nextUrl.pathname.startsWith("/dashboard/student")) {
+            if (token?.role === "MENTOR") {
+                return NextResponse.redirect(new URL("/dashboard/mentor", req.url));
+            }
+            if (!token?.role) {
+                return NextResponse.redirect(new URL("/auth/login", req.url));
+            }
+        }
+
+        return NextResponse.next();
+    },
+    {
+        callbacks: {
+            authorized: ({ token }) => !!token,
+        },
+    }
+);
+
+export const config = {
+    matcher: ["/dashboard/:path*"],
+=======
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
@@ -8,46 +65,6 @@ const JWT_SECRET = new TextEncoder().encode(SECRET_KEY);
 
 // Routes that require authentication
 const PROTECTED_ROUTES = [
-    '/dashboard',
-    '/projects',
-    '/tasks',
-    '/feedback',
-    '/profile',
-    '/settings',
-];
-
-// Routes that should redirect authenticated users away (login/signup)
-const AUTH_ROUTES = [
-    '/auth/login',
-    '/auth/signup',
-];
-
-// Public routes that don't require authentication
-const PUBLIC_ROUTES = [
-    '/',
-    '/about',
-    '/contact',
-    '/api/health',
-];
-
-// API routes that are always public
-const PUBLIC_API_ROUTES = [
-    '/api/auth/login',
-    '/api/auth/signup',
-    '/api/auth/session',
-    '/api/health',
-];
-
-/**
- * Middleware to protect routes and handle authentication
- * 
- * This middleware:
- * 1. Protects /dashboard/* and other protected routes
- * 2. Redirects authenticated users away from login/signup
- * 3. Allows public API routes
- * 4. Validates session tokens for protected routes
- */
-export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // ============================================================
@@ -160,4 +177,5 @@ export const config = {
          */
         '/((?!_next/static|_next/image|favicon.ico|.*\\..*|public).*)',
     ],
+>>>>>>> 4de8c1147d8a9ffd4acd0b5780d80706e8c116da
 };

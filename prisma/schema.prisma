@@ -1,11 +1,10 @@
-// This is your Prisma schema file
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -18,7 +17,16 @@ model User {
   feedbackSent     Feedback[]   @relation("SentFeedback")
   feedbackReceived Feedback[]   @relation("ReceivedFeedback")
   engagementLogs   Engagement[]
+  assignedTasks    Task[]       @relation("AssignedTasks")
+  createdTasks     Task[]       @relation("CreatedTasks")
+  healthStatus     HealthStatus?
+  mentorId         String?
+  mentor           User?        @relation("MentorStudents", fields: [mentorId], references: [id])
+  students         User[]       @relation("MentorStudents")
+  projectId        String?
+  project          Project?     @relation("ProjectMembers", fields: [projectId], references: [id])
   createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 }
 
 enum Role {
@@ -31,35 +39,112 @@ model Project {
   id          String   @id @default(cuid())
   name        String
   description String?
+  status      ProjectStatus @default(ACTIVE)
+  
   members     User[]   @relation("ProjectMembers")
   tasks       Task[]
+  
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
 }
 
 model Task {
   id          String   @id @default(cuid())
   title       String
+<<<<<<< HEAD
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    Priority @default(MEDIUM)
+  
+=======
   status      String   @default("TODO") // TODO, IN_PROGRESS, IN_REVIEW, DONE
+>>>>>>> 4de8c1147d8a9ffd4acd0b5780d80706e8c116da
   projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  
+  createdById  String
+  createdBy    User    @relation("CreatedTasks", fields: [createdById], references: [id])
+  
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model Feedback {
-  id         String   @id @default(cuid())
-  rating     Int      // Scale 1-5
-  comment    String
-  senderId   String
-  sender     User     @relation("SentFeedback", fields: [senderId], references: [id])
-  receiverId String
-  receiver   User     @relation("ReceivedFeedback", fields: [receiverId], references: [id])
-  createdAt  DateTime @default(now())
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
 }
 
-model Engagement {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  action    String   // e.g., "TASK_COMPLETED", "DAILY_LOG_IN"
-  timestamp DateTime @default(now())
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
+
+model Feedback {
+  id          String   @id @default(cuid())
+  
+  senderId    String
+  sender      User     @relation("FeedbackSender", fields: [senderId], references: [id])
+  
+  receiverId  String
+  receiver    User     @relation("FeedbackReceiver", fields: [receiverId], references: [id])
+  
+  rating      Int      // 1-5 stars
+  comment     String
+  sentiment   Sentiment
+  category    FeedbackCategory
+  isAnonymous Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  CONSTRUCTIVE
+}
+
+enum FeedbackCategory {
+  COLLABORATION
+  COMMUNICATION
+  TECHNICAL
+  LEADERSHIP
+  OTHER
+}
+
+model HealthStatus {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  status            HealthStatusType @default(NORMAL)
+  engagementScore   Int      @default(0) // 0-100
+  taskCompletion    Int      @default(0) // 0-100
+  feedbackScore     Int      @default(0) // 0-100
+  lastActive        DateTime @default(now())
+  flags             String[] // Array of warning flags
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+enum HealthStatusType {
+  EXCELLENT
+  NORMAL
+  AT_RISK
+}
+

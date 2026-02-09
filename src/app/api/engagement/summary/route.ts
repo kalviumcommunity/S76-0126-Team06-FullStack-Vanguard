@@ -1,3 +1,13 @@
+            status: healthStatus.status,
+            lastActive: healthStatus.lastActive,
+        });
+    } catch (error) {
+        console.error('[Engagement Summary API Error]:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}
+
+=======
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -297,3 +307,4 @@ export async function GET(request: NextRequest) {
         );
     }
 }
+>>>>>>> 4de8c1147d8a9ffd4acd0b5780d80706e8c116da

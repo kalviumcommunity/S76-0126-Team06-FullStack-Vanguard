@@ -47,6 +47,45 @@ export async function POST(request: Request) {
       );
     }
 
+<<<<<<< HEAD
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'User with this email already exists' },
+        { status: 400 }
+      );
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user in DB
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: role.toUpperCase() as any, // Enum expects uppercase
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      message: 'Signup successful',
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+=======
     // Validate role (optional field, defaults to STUDENT)
     const validRoles: Role[] = ['STUDENT', 'MENTOR', 'ADMIN'];
     const userRole: Role = role && validRoles.includes(role) ? role : 'STUDENT';
@@ -112,6 +151,7 @@ export async function POST(request: Request) {
     // 6. RETURN SUCCESS RESPONSE
     // ============================================================
 
+>>>>>>> 4de8c1147d8a9ffd4acd0b5780d80706e8c116da
     return NextResponse.json(
       {
         success: true,
