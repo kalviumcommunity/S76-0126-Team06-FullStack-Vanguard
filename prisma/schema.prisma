@@ -8,28 +8,25 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  password      String    // hashed with bcrypt
-  role          Role      @default(STUDENT)
-  
-  // Student-specific fields
-  projectId     String?
-  project       Project?  @relation("ProjectMembers", fields: [projectId], references: [id])
-  mentorId      String?
-  mentor        User?     @relation("MentorStudents", fields: [mentorId], references: [id])
-  students      User[]    @relation("MentorStudents")
-  
-  // Relationships
-  assignedTasks      Task[]           @relation("AssignedTasks")
-  createdTasks       Task[]           @relation("CreatedTasks")
-  feedbackGiven      Feedback[]       @relation("FeedbackSender")
-  feedbackReceived   Feedback[]       @relation("FeedbackReceiver")
-  healthStatus       HealthStatus?
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id               String       @id @default(cuid())
+  name             String?
+  email            String       @unique
+  password         String       // Hashed password using bcrypt
+  role             Role         @default(STUDENT)
+  projects         Project[]    @relation("ProjectMembers")
+  feedbackSent     Feedback[]   @relation("SentFeedback")
+  feedbackReceived Feedback[]   @relation("ReceivedFeedback")
+  engagementLogs   Engagement[]
+  assignedTasks    Task[]       @relation("AssignedTasks")
+  createdTasks     Task[]       @relation("CreatedTasks")
+  healthStatus     HealthStatus?
+  mentorId         String?
+  mentor           User?        @relation("MentorStudents", fields: [mentorId], references: [id])
+  students         User[]       @relation("MentorStudents")
+  projectId        String?
+  project          Project?     @relation("ProjectMembers", fields: [projectId], references: [id])
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 }
 
 enum Role {
@@ -60,10 +57,14 @@ enum ProjectStatus {
 model Task {
   id          String   @id @default(cuid())
   title       String
+<<<<<<< HEAD
   description String?
   status      TaskStatus @default(TODO)
   priority    Priority @default(MEDIUM)
   
+=======
+  status      String   @default("TODO") // TODO, IN_PROGRESS, IN_REVIEW, DONE
+>>>>>>> 4de8c1147d8a9ffd4acd0b5780d80706e8c116da
   projectId   String
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   
