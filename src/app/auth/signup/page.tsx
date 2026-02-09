@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
+import { signIn } from 'next-auth/react';
 import { UserPlus, AlertCircle } from 'lucide-react';
 
 export default function SignupPage() {
@@ -10,11 +10,10 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'student' | 'mentor'>('student');
+  const [role, setRole] = useState<'STUDENT' | 'MENTOR'>('STUDENT');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +38,25 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      await signup(name, email, password, role);
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Signup failed');
+      }
+
+      // Auto login after signup
+      await signIn('credentials', {
+        redirect: true,
+        callbackUrl: role === 'MENTOR' ? '/dashboard/mentor' : '/dashboard/student',
+        email,
+        password,
+      });
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     } finally {
@@ -84,23 +101,21 @@ export default function SignupPage() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setRole('student')}
-                  className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm ${
-                    role === 'student'
-                      ? 'bg-[#10b981]/20 border-[#10b981] text-[#10b981]'
-                      : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
-                  }`}
+                  onClick={() => setRole('STUDENT')}
+                  className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm ${role === 'STUDENT'
+                    ? 'bg-[#10b981]/20 border-[#10b981] text-[#10b981]'
+                    : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
+                    }`}
                 >
                   📚 Student
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRole('mentor')}
-                  className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm ${
-                    role === 'mentor'
-                      ? 'bg-purple-600/20 border-purple-500 text-purple-400'
-                      : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
-                  }`}
+                  onClick={() => setRole('MENTOR')}
+                  className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm ${role === 'MENTOR'
+                    ? 'bg-purple-600/20 border-purple-500 text-purple-400'
+                    : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
+                    }`}
                 >
                   👨‍🏫 Mentor
                 </button>

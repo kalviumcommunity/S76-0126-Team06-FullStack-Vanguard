@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
@@ -30,36 +32,41 @@ export async function POST(request: Request) {
       );
     }
 
-    // TODO: Replace with actual database user creation
-    // For now, mock signup (in production, hash password, check if user exists, etc.)
-    
-    // Create session data
-    const session = {
-      user: {
-        id: email, // In production, use actual generated user ID
-        email,
-        name,
-        role,
-      },
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    };
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
 
-    // In production, set httpOnly cookie
-    const response = NextResponse.json({
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'User with this email already exists' },
+        { status: 400 }
+      );
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user in DB
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: role.toUpperCase() as any, // Enum expects uppercase
+      },
+    });
+
+    return NextResponse.json({
       success: true,
-      user: session.user,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
       message: 'Signup successful',
     });
-
-    // Set session cookie
-    response.cookies.set('session', JSON.stringify(session), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-    });
-
-    return response;
   } catch (error) {
     console.error('Signup error:', error);
     return NextResponse.json(

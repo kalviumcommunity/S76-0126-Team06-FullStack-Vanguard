@@ -1,60 +1,83 @@
 import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+  role: z.string().optional(),
+});
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, role } = body;
+    const validation = loginSchema.safeParse(body);
 
-    // Basic validation
-    if (!email || !password || !role) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Email, password, and role are required' },
+        { error: 'Invalid input' },
         { status: 400 }
       );
     }
 
-    // TODO: Replace with actual database authentication
-    // For now, using mock authentication
-    const mockUsers = [
-      { email: 'student@vanguard.com', password: 'student123', role: 'student', name: 'John Student' },
-      { email: 'mentor@vanguard.com', password: 'mentor123', role: 'mentor', name: 'Jane Mentor' },
-    ];
+    const { email, password, role } = validation.data;
 
-    const user = mockUsers.find(
-      (u) => u.email === email && u.password === password && u.role === role
-    );
+    // Find user in DB with projects
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        projects: {
+          select: { id: true },
+          take: 1
+        },
+        ownedProjects: {
+          select: { id: true },
+          take: 1
+        }
+      }
+    });
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid credentials or role' },
+        { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
 
+    // Role check
+    if (role && user.role.toLowerCase() !== role.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'Role mismatch' },
+        { status: 401 }
+      );
+    }
+
+    // Determine projectId (prioritize owned, then member)
+    const projectId = user.ownedProjects[0]?.id || user.projects[0]?.id;
+
     // Create session data
     const session = {
       user: {
-        id: user.email, // In production, use actual user ID
+        id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: user.role.toLowerCase(),
+        projectId: projectId, // Include projectId
       },
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     };
 
-    // In production, set httpOnly cookie
     const response = NextResponse.json({
       success: true,
       user: session.user,
       message: 'Login successful',
     });
 
-    // Set session cookie
     response.cookies.set('session', JSON.stringify(session), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 7 * 24 * 60 * 60,
     });
 
     return response;

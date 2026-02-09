@@ -6,47 +6,51 @@ import { cn } from "@/lib/utils";
 import {
     LayoutDashboard,
     Users,
-    BookOpen,
+    CheckSquare,
+    MessageSquare,
+    TrendingUp,
     Settings,
     LogOut,
-    GraduationCap,
-    MessageCircle,
     Zap,
+    FolderOpen
 } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 
 const studentNavigation = [
-    { name: "Squad Health", href: "/dashboard", icon: LayoutDashboard },
-    { name: "My Progress", href: "/progress", icon: GraduationCap },
-    { name: "Task Board", href: "/tasks", icon: BookOpen },
-    { name: "Feedback", href: "/feedback", icon: MessageCircle },
-    { name: "Team", href: "/team", icon: Users },
+    { name: "Dashboard", href: "/dashboard/student", icon: LayoutDashboard },
+    { name: "Squad Health", href: "/squad-health", icon: Zap },
+    { name: "Projects", href: "/projects", icon: FolderOpen },
+    { name: "Teams", href: "/teams", icon: Users },
+    { name: "Analytics", href: "/analytics", icon: TrendingUp },
 ];
 
 const mentorNavigation = [
-    { name: "Squad Health", href: "/mentor/dashboard", icon: Zap },
-    { name: "Teams", href: "/mentor/teams", icon: Users },
-    { name: "Projects", href: "/mentor/projects", icon: BookOpen },
-    { name: "Analytics", href: "/mentor/analytics", icon: LayoutDashboard },
+    { name: "Squad Health", href: "/squad-health", icon: Zap },
+    { name: "Projects", href: "/projects", icon: FolderOpen },
+    { name: "Teams", href: "/teams", icon: Users },
+    { name: "Analytics", href: "/analytics", icon: TrendingUp },
 ];
 
-interface SidebarProps {
-    role?: "STUDENT" | "MENTOR";
-}
-
-export function Sidebar({ role = "STUDENT" }: SidebarProps) {
+export function Sidebar() {
     const pathname = usePathname();
+    const { data: session } = useSession();
+
+    const role = session?.user?.role || "STUDENT";
     const navigation = role === "STUDENT" ? studentNavigation : mentorNavigation;
 
     return (
-        <div className="flex h-screen w-64 flex-col border-r bg-card text-card-foreground">
-            <div className="flex h-14 items-center border-b px-6">
-                <Link href="/" className="flex items-center gap-2 font-semibold">
-                    <div className="h-6 w-6 rounded-full bg-linear-to-br from-blue-500 to-purple-600" />
-                    <span className="text-lg">Vanguard</span>
+        <div className="flex h-screen w-64 flex-col border-r border-white/10 bg-[#0a0a0a] text-white">
+            <div className="flex h-16 items-center border-b border-white/10 px-6">
+                <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
+                    <div className="h-8 w-8 rounded-lg bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] flex items-center justify-center">
+                        <Zap className="h-5 w-5 text-white fill-white" />
+                    </div>
+                    <span className="text-xl">Vanguard</span>
                 </Link>
             </div>
-            <div className="flex-1 overflow-auto py-4">
-                <nav className="grid items-start px-4 text-sm font-medium">
+
+            <div className="flex-1 overflow-auto py-6">
+                <nav className="space-y-1 px-3">
                     {navigation.map((item) => {
                         const isActive = pathname === item.href;
                         return (
@@ -54,13 +58,16 @@ export function Sidebar({ role = "STUDENT" }: SidebarProps) {
                                 key={item.href}
                                 href={item.href}
                                 className={cn(
-                                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary mb-1",
+                                    "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 group",
                                     isActive
-                                        ? "bg-secondary text-primary"
-                                        : "text-muted-foreground"
+                                        ? "bg-white/10 text-emerald-400"
+                                        : "text-gray-400 hover:bg-white/5 hover:text-white"
                                 )}
                             >
-                                <item.icon className="h-4 w-4" />
+                                <item.icon className={cn(
+                                    "h-5 w-5 transition-colors",
+                                    isActive ? "text-emerald-400" : "text-gray-500 group-hover:text-emerald-400"
+                                )} />
                                 {item.name}
                             </Link>
                         );
@@ -68,16 +75,19 @@ export function Sidebar({ role = "STUDENT" }: SidebarProps) {
                 </nav>
             </div>
 
-            <div className="border-t p-4 space-y-2">
+            <div className="border-t border-white/10 p-4 space-y-1">
                 <Link
                     href="/settings"
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-primary transition-all hover:bg-secondary"
+                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-all cursor-pointer"
                 >
-                    <Settings className="h-4 w-4" />
+                    <Settings className="h-5 w-5 text-gray-500" />
                     Settings
                 </Link>
-                <button className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-500/10 transition-all">
-                    <LogOut className="h-4 w-4" />
+                <button
+                    onClick={() => signOut({ callbackUrl: '/auth/login' })}
+                    className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                >
+                    <LogOut className="h-5 w-5" />
                     Sign Out
                 </button>
             </div>

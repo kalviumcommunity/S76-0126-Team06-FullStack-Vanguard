@@ -2,16 +2,17 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { LogIn, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'student' | 'mentor'>('student');
+  const [role, setRole] = useState<'STUDENT' | 'MENTOR'>('STUDENT');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,9 +20,24 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password, role);
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (result?.error) {
+        setError("Invalid email or password");
+      } else {
+        // Redirection logic
+        if (role === 'MENTOR') {
+          router.push('/dashboard/mentor');
+        } else {
+          router.push('/dashboard/student');
+        }
+      }
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -71,23 +87,21 @@ export default function LoginPage() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setRole('student')}
-                  className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm ${
-                    role === 'student'
-                      ? 'bg-[#10b981]/20 border-[#10b981] text-[#10b981]'
-                      : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
-                  }`}
+                  onClick={() => setRole('STUDENT')}
+                  className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm ${role === 'STUDENT'
+                    ? 'bg-[#10b981]/20 border-[#10b981] text-[#10b981]'
+                    : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
+                    }`}
                 >
                   📚 Student
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRole('mentor')}
-                  className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm ${
-                    role === 'mentor'
-                      ? 'bg-purple-600/20 border-purple-500 text-purple-400'
-                      : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
-                  }`}
+                  onClick={() => setRole('MENTOR')}
+                  className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm ${role === 'MENTOR'
+                    ? 'bg-purple-600/20 border-purple-500 text-purple-400'
+                    : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
+                    }`}
                 >
                   👨‍🏫 Mentor
                 </button>
@@ -127,9 +141,9 @@ export default function LoginPage() {
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 text-gray-400 cursor-pointer hover:text-gray-300">
-                <input 
-                  type="checkbox" 
-                  className="rounded w-4 h-4 bg-[#0f0f0f] border-gray-700 text-[#10b981] focus:ring-[#10b981]" 
+                <input
+                  type="checkbox"
+                  className="rounded w-4 h-4 bg-[#0f0f0f] border-gray-700 text-[#10b981] focus:ring-[#10b981]"
                 />
                 Remember me
               </label>

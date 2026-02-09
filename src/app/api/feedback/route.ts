@@ -1,193 +1,92 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { cookies } from 'next/headers';
+import { Sentiment, FeedbackCategory } from '@prisma/client';
 
 /**
- * Extract user ID from session cookie
+ * GET /api/feedback/received?userId={id}
+ * Fetch feedback received by a user
  */
-async function getUserIdFromRequest(): Promise<string | null> {
+export async function GET(request: NextRequest) {
     try {
-        const cookieStore = await cookies();
-        const sessionCookie = cookieStore.get('session');
-
-        if (!sessionCookie?.value) {
-            return null;
+        const session = await getServerSession(authOptions);
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const session = JSON.parse(sessionCookie.value);
-        return session.user?.id || null;
+        const { searchParams } = new URL(request.url);
+        const userId = searchParams.get('userId') || session.user.id;
+
+        const feedback = await prisma.feedback.findMany({
+            where: { receiverId: userId },
+            include: {
+                sender: {
+                    select: { id: true, name: true, email: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // Handle anonymity: Scrub sender info if isAnonymous is true
+        const sanitizedFeedback = feedback.map(f => ({
+            ...f,
+            sender: f.isAnonymous ? null : f.sender
+        }));
+
+        return NextResponse.json({ feedback: sanitizedFeedback });
     } catch (error) {
-        console.error('Error extracting user ID:', error);
-        return null;
+        console.error('GET /api/feedback error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
 /**
- * GET /api/projects
- * Fetch all projects where the current user is a member
+ * POST /api/feedback/submit
+ * Submit feedback
  */
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
     try {
-        const userId = await getUserIdFromRequest();
-
-        if (!userId) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            );
+        const session = await getServerSession(authOptions);
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const projects = await prisma.project.findMany({
-            where: {
-                members: {
-                    some: {
-                        id: userId,
-                    },
-                },
+        const body = await request.json();
+        const { receiverId, rating, comment, sentiment, category, isAnonymous } = body;
+
+        // Validation
+        if (!receiverId || rating === undefined || !comment || !sentiment || !category) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+
+        const feedback = await prisma.feedback.create({
+            data: {
+                receiverId,
+                senderId: session.user.id,
+                rating: Number(rating),
+                comment,
+                sentiment: sentiment as Sentiment,
+                category: category as FeedbackCategory,
+                isAnonymous: Boolean(isAnonymous),
             },
-            select: {
-                id: true,
-                name: true,
-                description: true,
-                createdAt: true,
-                members: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        role: true,
-                    },
-                },
-                tasks: {
-                    select: {
-                        id: true,
-                        title: true,
-                        status: true,
-                    },
-                },
-            },
-            orderBy: {
-                createdAt: 'desc',
-            },
+            include: {
+                sender: {
+                    select: { id: true, name: true, email: true }
+                }
+            }
         });
 
         return NextResponse.json({
             success: true,
-            data: projects,
-            count: projects.length,
-        });
+            feedback: {
+                ...feedback,
+                sender: feedback.isAnonymous ? null : feedback.sender
+            }
+        }, { status: 201 });
     } catch (error) {
-        console.error('GET /api/projects error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
+        console.error('POST /api/feedback/submit error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
-/**
- * POST /api/projects
- * Create a new project with members
- */
-export async function POST(request: NextRequest) {
-    try {
-        const userId = await getUserIdFromRequest();
-
-        if (!userId) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            );
-        }
-
-        const body = await request.json();
-        const { name, description, memberIds } = body;
-
-        // Validation
-        if (!name || typeof name !== 'string' || name.trim().length === 0) {
-            return NextResponse.json(
-                { error: 'Project name is required and must be a non-empty string' },
-                { status: 400 }
-            );
-        }
-
-        if (description && typeof description !== 'string') {
-            return NextResponse.json(
-                { error: 'Description must be a string' },
-                { status: 400 }
-            );
-        }
-
-        if (memberIds && !Array.isArray(memberIds)) {
-            return NextResponse.json(
-                { error: 'memberIds must be an array' },
-                { status: 400 }
-            );
-        }
-
-        // Ensure creator is included in members
-        const membersToAdd = Array.isArray(memberIds)
-            ? Array.from(new Set([userId, ...memberIds])) // Remove duplicates
-            : [userId];
-
-        // Verify all member IDs exist
-        const members = await prisma.user.findMany({
-            where: {
-                id: {
-                    in: membersToAdd,
-                },
-            },
-            select: { id: true },
-        });
-
-        if (members.length !== membersToAdd.length) {
-            return NextResponse.json(
-                { error: 'One or more member IDs are invalid' },
-                { status: 400 }
-            );
-        }
-
-        // Create project with members
-        const project = await prisma.project.create({
-            data: {
-                name: name.trim(),
-                description: description?.trim() || null,
-                members: {
-                    connect: membersToAdd.map((id) => ({ id })),
-                },
-            },
-            include: {
-                members: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        role: true,
-                    },
-                },
-                tasks: {
-                    select: {
-                        id: true,
-                        title: true,
-                        status: true,
-                    },
-                },
-            },
-        });
-
-        return NextResponse.json(
-            {
-                success: true,
-                data: project,
-                message: 'Project created successfully',
-            },
-            { status: 201 }
-        );
-    } catch (error) {
-        console.error('POST /api/projects error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
-    }
-}
